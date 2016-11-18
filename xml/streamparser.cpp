@@ -30,12 +30,18 @@ void StreamParser::countFrequence(int *contNumbers, int* conLetters, Patricia<El
                 invalid();
                 exit(0);
             case QXmlStreamReader::StartElement:{
-                this->contTag(xml.name(), xml.prefix(), patTags);
+                this->contTag(xml.name(), xml.prefix(), patTags, false);
                 if(!xml.namespaceDeclarations().isEmpty()){
                     foreach(QXmlStreamNamespaceDeclaration nd, xml.namespaceDeclarations()){
                         QString name = "xmlns";
-                        this->contAtt(&name, nd.prefix(), nd.namespaceUri(),
-                                      contNumbers, conLetters, patAtr);
+                        if(nd.prefix().isEmpty()){
+                            this->contAtt(&name, nd.prefix(), nd.namespaceUri(),
+                                          contNumbers, conLetters, patAtr);
+                        } else {
+                            this->contAtt(nd.prefix(), &name, nd.namespaceUri(),
+                                          contNumbers, conLetters, patAtr);
+                        }
+
                     }
                 }
                 if(!xml.attributes().isEmpty()){
@@ -50,7 +56,7 @@ void StreamParser::countFrequence(int *contNumbers, int* conLetters, Patricia<El
                 break;
             case QXmlStreamReader::StartDocument: {
                 QString xmlStr = "?xml";
-                this->contTag(&xmlStr, nullptr, patTags);
+                this->contTag(&xmlStr, nullptr, patTags, false);
                 if(!xml.documentVersion().isEmpty()){
                     QString version = "version";
                     this->contAtt(&version, nullptr, xml.documentVersion(),
@@ -70,15 +76,15 @@ void StreamParser::countFrequence(int *contNumbers, int* conLetters, Patricia<El
                 break;
             }
             case QXmlStreamReader::Comment:{
-                QString comment = "!--";
-                this->contTag(&comment, nullptr, patTags);
+                QString comment = "--";
+                this->contTag(&comment, nullptr, patTags, false);
                 this->contChar(xml.text(), conLetters);
                 types.pop();
                 break;
             }
             case QXmlStreamReader::DTD:{
                 QString dtd = "!DTD";
-                this->contTag(&dtd, nullptr, patTags);
+                this->contTag(&dtd, nullptr, patTags, false);
                 this->contChar(xml.text(), conLetters);
                 types.pop();
                 break;
@@ -114,13 +120,20 @@ void StreamParser::compress(ofstream* out, Patricia<Element *> *tags, Patricia<E
                 this->writeSeparator(true);
                 this->contSeparator = -1;
                 this->writeTag(xml.name(),xml.prefix(),tags);
-                if(!xml.namespaceDeclarations().isEmpty()){
+                int u = xml.namespaceDeclarations().size();
+                int v = xml.attributes().size();
+                this->writeNumberOfAttributes(u+v);
+                if(u>0){
                     foreach(QXmlStreamNamespaceDeclaration nd, xml.namespaceDeclarations()){
                         QString name = "xmlns";
-                        this->writeAttr(&name, nd.prefix(), nd.namespaceUri(),num, let, attr);
+                        if(nd.prefix().isEmpty()){
+                            this->writeAttr(&name, nd.prefix(), nd.namespaceUri(),num, let, attr);
+                        } else {
+                            this->writeAttr(nd.prefix(), &name, nd.namespaceUri(),num, let, attr);
+                        }
                     }
                 }
-                if(!xml.attributes().isEmpty())
+                if(v>0)
                     foreach(QXmlStreamAttribute at, xml.attributes())
                         this->writeAttr(at.name(), at.prefix(), at.value(), num, let, attr);
                 break;
@@ -133,7 +146,10 @@ void StreamParser::compress(ofstream* out, Patricia<Element *> *tags, Patricia<E
             case QXmlStreamReader::StartDocument: {
                 QString xmlStr = "?xml";
                 this->writeTag(&xmlStr, nullptr, tags);
-                this->contTag(&xmlStr, nullptr, tags);
+                int numberOfAttributes = int(!xml.documentVersion().isEmpty())+
+                        int(!xml.documentEncoding().isEmpty())+int(xml.isStandaloneDocument());
+                this->writeNumberOfAttributes(numberOfAttributes);
+
                 if(!xml.documentVersion().isEmpty()){
                     QString version = "version";
                     this->writeAttr(&version, nullptr, xml.documentVersion(), num, let, attr);
@@ -152,16 +168,26 @@ void StreamParser::compress(ofstream* out, Patricia<Element *> *tags, Patricia<E
                 break;
             }
             case QXmlStreamReader::Comment:{
-                QString comment = "!--";
+                this->writeSeparator(true);
+                QString comment = "--";
                 this->writeTag(&comment, nullptr, tags);
+                this->writeNumberOfAttributes(0);
+                this->contSeparator = -1;
+                this->writeSeparator(false);
                 this->writeChar(Util::trim(xml.text()), let, false);
+                contSeparator++;
                 types.pop();
                 break;
             }
             case QXmlStreamReader::DTD:{
+                this->writeSeparator(true);
                 QString dtd = "!DTD";
                 this->writeTag(&dtd, nullptr, tags);
+                this->writeNumberOfAttributes(0);
+                this->contSeparator = -1;
+                this->writeSeparator(false);
                 this->writeChar(Util::trim(xml.text()), let, false);
+                contSeparator++;
                 types.pop();
                 break;
             }
@@ -187,6 +213,14 @@ void StreamParser::compress(ofstream* out, Patricia<Element *> *tags, Patricia<E
        }
     }
     if(this->lenghtBuffer>0){
+        /*string s = "";
+        for(int k=0;k<lenghtBuffer;k++){
+            unsigned char ch = (unsigned char) buffer[k];
+            for(unsigned char m=128;m>0;m>>=1){
+                s += (ch & m) ? "1" : "0";
+            }
+        }
+        cout << s << endl;*/
         this->out->write(this->buffer, this->lenghtBuffer);
         this->lenghtBuffer = 0;
     }
@@ -227,13 +261,13 @@ void StreamParser::contChar(const QStringRef content, int *cont)
     }
 }
 
-int StreamParser::contTag(const QStringRef name, const QStringRef prefix, Patricia<Element*> *pat)
+int StreamParser::contTag(const QStringRef name, const QStringRef prefix, Patricia<Element*> *pat, bool isAttr)
 {
     int res = Element::TEXT;
     string tag = name.toString().toStdString();
     if(!prefix.isEmpty()) tag = prefix.toString().toStdString()+":"+tag;
     Element** e = pat->get(tag);
-    if(e==nullptr) pat->insert(tag, new Element(tag, 1));
+    if(e==nullptr) pat->insert(tag, (isAttr ? new Element(tag, 1, Element::ATTRIBUTE) : new Element(tag, 1)));
     else {
         (*e)->increaseAmount();
         res = (*e)->getType();
@@ -245,7 +279,7 @@ int StreamParser::contTag(const QStringRef name, const QStringRef prefix, Patric
 
 int StreamParser::contAtt(const QStringRef name, const QStringRef prefix, const QStringRef content, int *contNumbers, int *conLetters, Patricia<Element *> *pat)
 {
-    int type = this->contTag(name, prefix, pat);
+    int type = this->contTag(name, prefix, pat, true);
     int *cont = (type==Element::NUMBER) ? contNumbers : conLetters;
     this->contChar(content, cont);
     types.pop();
@@ -267,7 +301,7 @@ void StreamParser::writeSeparator(bool isTag)
         this->contSeparator = 0;
     } else {
         this->increaseMask();
-        this->writeBit(this->contSeparator > 0);
+        this->writeBit(this->contSeparator < 0);
     }
     this->writeBit(isTag);
 }
@@ -276,11 +310,13 @@ int StreamParser::writeTag(QStringRef name, QStringRef prefix, Patricia<Element 
 {
     string tag = name.toString().toStdString();
     if(!prefix.isEmpty()) tag = prefix.toString().toStdString()+":"+tag;
+
     Element** e = pat->get(tag);
     Bits* b = (*e)->getBits();
+
     int i = 0;
-    for(int k=0,t=(b->length/8);k<t;k++){
-        unsigned char ch = (unsigned char) b->value[k/8];
+    for(int k=0,t=ceil(b->length/8.0);k<t;k++){
+        unsigned char ch = (unsigned char) b->value[k];
         for(unsigned char m=128;m>0 && i<b->length;i++,m>>=1)
             this->writeBit(ch & m);
     }
@@ -303,9 +339,25 @@ void StreamParser::writeChar(std::string content, std::unordered_map<unsigned ch
     for(int j=0,tam=content.length()+1;j<tam;j++){
         unsigned char c = (unsigned char) data[j];
         HuffBits hb = map->at(c);
+
+        /*if(content=="1.0"){
+
+            QString a = "";
+            int i = 0;
+            for(int k=0,t=ceil(hb.length/8.0);k<t;k++){
+                unsigned char ch = (unsigned char) hb.value[k];
+                for(unsigned char m=128;m>0 && i<hb.length;i++,m>>=1)
+                    a += (ch & m) ? "1" : "0";
+            }
+            qDebug() << QChar(c) << int(c) << " " << a;
+
+        }*/
+
+
+
         int i = 0;
-        for(int k=0,t=(hb.length/8);k<t;k++){
-            unsigned char ch = (unsigned char) hb.value[k/8];
+        for(int k=0,t=ceil(hb.length/8.0);k<t;k++){
+            unsigned char ch = (unsigned char) hb.value[k];
             for(unsigned char m=128;m>0 && i<hb.length;i++,m>>=1)
                 this->writeBit(ch & m);
         }

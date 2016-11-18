@@ -57,7 +57,7 @@ private:
     void invalid();
 
     void contChar(const QStringRef content, int *cont);
-    int contTag(const QStringRef name, const QStringRef prefix, Patricia<Element*>* pat);
+    int contTag(const QStringRef name, const QStringRef prefix, Patricia<Element*>* pat, bool isAttr);
     int contAtt(const QStringRef name, const QStringRef prefix, const QStringRef content, int *contNumbers, int* conLetters, Patricia<Element*>* pat);
 
 
@@ -67,6 +67,18 @@ private:
                 std::unordered_map<unsigned char,HuffBits>*num, std::unordered_map<unsigned char,
                 HuffBits>* let, Patricia<Element*>* pat);
     void writeChar(std::string content, std::unordered_map<unsigned char,HuffBits>* map, bool isAtrr);
+
+    inline void writeNumberOfAttributes(int numberOfAttributes){
+        int tAux;
+        char* ch = Util::convertUIntToChar(numberOfAttributes,tAux);
+        for(int k=0;k<tAux;k++){
+            unsigned char c = (unsigned char) ch[k];
+            for(unsigned char m=128;m>0;m>>=1){
+                this->writeBit(c & m);
+            }
+        }
+    }
+
     inline void increaseMask(){
         this->mask>>=1;
         if(mask==0){
@@ -80,11 +92,11 @@ private:
         }
     }
     inline void writeBit(){
-        this->byte = this->byte & this->mask;
+        this->byte = this->byte | this->mask;
         this->increaseMask();
     }
     inline void writeBit(bool ok){
-        if(ok) this->byte = this->byte & this->mask;
+        if(ok) this->byte = this->byte | this->mask;
         this->increaseMask();
     }
 };

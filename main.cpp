@@ -21,16 +21,24 @@ QString getNome(int n){
 
 int main(){
 
-    int op = 1;
+    int op = 7;
 
     QStringList l;
     l.append("0001.svg");
+    l.append("0003.svg");
+    l.append("0011.svg");
+    l.append("0023.svg");
+    l.append("0024.svg");
+    l.append("0382.svg");
     l.append("brasil.svg");
+
 
     QString filename = "/home/anderson/Documentos/tmp/scarlet-testes/"+l.at(op-1);
 
-    Compress::compress(filename);
-    Decompress::decompress(Util::getWithoutExtension(filename)+".scl");
+    Compress *c = new Compress(filename);
+    Decompress *d = new Decompress(Util::getWithoutExtension(filename)+".scl");
+    c->compress();
+    d->decompress();
 }
 
 /*

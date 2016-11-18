@@ -35,7 +35,7 @@ private:
 
     void toBinary(HuffmanTree *nodo, unsigned char *vector,
                                unsigned char *mask, int *index);
-    static HuffElement* buildTree(char *structure, int* index, unsigned char* mask, std::unordered_map<int, Element *> *ele);
+    static HuffElement* buildTree(char *structure, int* index, unsigned char* mask, std::unordered_map<int, Element *> *ele, bool isTag);
 };
 
 #endif // HUFFELEMENT_H

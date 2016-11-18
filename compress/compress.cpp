@@ -24,8 +24,8 @@ void Compress::compress()
     Patricia<Element*> *contAttr = Util::attributes();
     this->parser->countFrequence(contNum, contLet, contTag, contAttr);
 
-    HuffElement *huffTags = this->createHuffElement(contTag);
-    HuffElement *huffAttr = this->createHuffElement(contAttr);
+    HuffElement *huffTags = this->createHuffElement(contTag, true);
+    HuffElement *huffAttr = this->createHuffElement(contAttr, false);
     HuffmanTree *treeNum = this->createHuffTree(contNum);
     HuffmanTree *treeLet = this->createHuffTree(contLet);
 
@@ -33,6 +33,33 @@ void Compress::compress()
     unordered_map<unsigned char,HuffBits>* tableLet = treeLet->toDictionary();
     Patricia<Element*>* tableTags = huffTags->toDictionary();
     Patricia<Element*>* tableAttr = huffAttr->toDictionary();
+
+   /* for(unordered_map<unsigned char,HuffBits>::iterator it=tableLet->begin();
+        it!=tableLet->end();it++){
+        unsigned ch = *(&it->first);
+        HuffBits h = *(&it->second);
+
+        unsigned char m = 128;
+        string s = "";
+        for(int k=0;k<h.length;k++,m>>=1){
+            int index = k/8;
+            if(m==0) m=128;
+            unsigned char c = (unsigned char) h.value[index];
+            s += (c & m) ? "1" : "0";
+        }
+
+        string o = treeLet->find(ch);
+
+        if(o!=s){
+            cout << int(ch) << " " << ch << " " << o << " " << s << endl;
+        }
+
+        if(ch==0){
+            cout << int(ch) << " " << ch << " " << o << " " << s << endl;
+        }
+    }
+*/
+
 
     this->out = new ofstream(Util::getOutputFilename(this->filename), ofstream::binary);
     *(this->out) << " ";
@@ -44,7 +71,7 @@ void Compress::compress()
 }
 
 
-HuffElement *Compress::createHuffElement(Patricia<Element *> *patricia)
+HuffElement *Compress::createHuffElement(Patricia<Element *> *patricia, bool tags)
 {
     PriorityQueue *pq = new PriorityQueue();
     for(Patricia<Element*>::iterator it=patricia->begin();
@@ -76,6 +103,7 @@ HuffmanTree *Compress::createHuffTree(int *cont)
             pq->insert(value);
         }
     }
+    if(pq->isEmpty()) return new HuffmanTree();
 
     HuffmanTree *one = (HuffmanTree*) pq->removeMin();
     while(!pq->isEmpty()){
@@ -118,7 +146,6 @@ void Compress::writeTrees(HuffElement *tags, HuffElement *attr, HuffmanTree *num
     this->out->write(aux,tAux);
     this->out->write(reinterpret_cast<char*>(tree), len);
     delete[] tree;
-
 }
 
 void Compress::write(Patricia<Element *> *tags, Patricia<Element *> *attr, std::unordered_map<unsigned char, HuffBits> *num, std::unordered_map<unsigned char, HuffBits> *let)

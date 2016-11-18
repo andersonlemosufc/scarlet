@@ -45,12 +45,22 @@ class Element
 public:
     Element(std::string name);
     Element(std::string name, int amount);
-    Element(std::string name, Code *code);
-    Element(std::string name, Code *code, int type);
+    Element(std::string name, int amount, int token);
+    Element(std::string name, Code *code, int token);
+    Element(std::string name, Code *code, int type, int token);
     ~Element();
+
     static const int NUMBER = 0;
     static const int TEXT = 1;
 
+    static const int NORMAL = 0;
+    static const int START_DOCUMENT = 1;
+    static const int DTD = 2;
+    static const int COMMENT = 3;
+    static const int ATTRIBUTE = 4;
+
+    void setContent(bool flag);
+    bool hasContent();
     void setCode(Code *code);
     void setName(std::string name);
     void setType(int type);
@@ -64,12 +74,20 @@ public:
     Bits *getBits();
     void setBits(Bits value);
 
+    int getToken();
+    void setToken(int value);
+
+    void setTokenByChar(char ch);
+
 private:
     Code *code;
     Bits bits;
     std::string name;
     int type;
     int amount;
+    int token;
+
+    bool content{false};
 };
 
 #endif // ELEMENT_H

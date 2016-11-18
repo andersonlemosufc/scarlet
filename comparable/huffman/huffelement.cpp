@@ -120,11 +120,11 @@ HuffElement *HuffElement::buildTree(char *structure, bool tags)
     unordered_map<int,Element*>* mapa = (tags) ? Util::mapOfTags() : Util::mapOfAttributes();
     int index = -1;
     unsigned char mask = 0;
-    return HuffElement::buildTree(structure,&index,&mask,mapa);
+    return HuffElement::buildTree(structure,&index,&mask,mapa, tags);
 }
 
 
-HuffElement *HuffElement::buildTree(char *structure, int *index, unsigned char *mask, std::unordered_map<int,Element*>* ele)
+HuffElement *HuffElement::buildTree(char *structure, int *index, unsigned char *mask, std::unordered_map<int,Element*>* ele, bool isTag)
 {
     HuffElement* nodo = new HuffElement();
     nodo->setElement(nullptr);
@@ -137,6 +137,7 @@ HuffElement *HuffElement::buildTree(char *structure, int *index, unsigned char *
     //se e folha
     if((*mask) & ch){
         increaseMask(mask, index);
+        ch = structure[*index];
         //se esta no mapa
         if((*mask) & ch){
             int i = ((int) Util::getChar(structure, mask, index));
@@ -151,12 +152,17 @@ HuffElement *HuffElement::buildTree(char *structure, int *index, unsigned char *
                 ch = Util::getChar(structure, mask, index);
             }
             v.push_back(ch);
-            Element *e = new Element(string((char*)v.data()));
+
+            Element *e = new Element(string((char*)v.data()), Element::ATTRIBUTE);
+            if(isTag){
+                char ch = (*(e->getName()))[0];
+                e->setTokenByChar(ch);
+            }
             nodo->setElement(e);
         }
     } else {
-        nodo->setLeft(HuffElement::buildTree(structure, index, mask, ele));
-        nodo->setRight(HuffElement::buildTree(structure, index, mask, ele));
+        nodo->setLeft(HuffElement::buildTree(structure, index, mask, ele, isTag));
+        nodo->setRight(HuffElement::buildTree(structure, index, mask, ele, isTag));
     }
     return nodo;
 }

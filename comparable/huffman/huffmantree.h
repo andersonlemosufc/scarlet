@@ -21,7 +21,27 @@ public:
     HuffmanTree();
     HuffmanTree(unsigned char value, int frequence);
 
+    std::string find(unsigned char ch){
+        std::string s = "";
+        find(ch, "", this, &s);
+        return s;
+    }
+
 private:
+
+    bool find(unsigned char ch, std::string res, HuffmanTree *h, std::string *pr){
+        if(h->isLeaf()) {
+            if(ch==h->getValue()) {
+                (*pr) = res;
+                return true;
+            }
+            return false;
+        }
+        else if(!find(ch, res+"0", h->getLeft(), pr)) return find(ch, res+"1", h->getRight(), pr);
+        return true;
+    }
+
+
     int frequence;
     unsigned char value;
     HuffmanTree* right;
