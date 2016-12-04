@@ -135,5 +135,18 @@ void Element::setTokenByChar(char ch)
     }
 }
 
+bool Element::equals(Element *other)
+{
+    if(other==nullptr) return false;
+    if(this->name != other->name) return false;
+    if(this->code->len!=other->code->len) return false;
+    for(int k=0;k<this->code->len;k++){
+        if(this->code->code[k]!=other->code->code[k]) return false;
+    }
+    if(this->type != other->type) return false;
+    if(this->token != other->token) return false;
+    return true;
+}
+
 
 

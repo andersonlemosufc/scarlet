@@ -30,7 +30,7 @@ private:
     std::ifstream *in;
     bool incompleteTag;
     std::stack<Element*> stack;
-    int bitsDespisedContent;
+    unsigned char bitsDespisedContent;
     bool lastWasContent{false};
 
     char* buffer;
@@ -53,7 +53,7 @@ private:
             this->mask = 128;
             this->indexIn++;
             if(this->indexIn==READ_BUFFER_LENGHT){
-                qDebug() << "error";
+                //qDebug() << "error";
                 this->indexIn=0;
                 this->in->read(this->dataIn, READ_BUFFER_LENGHT);
                 this->numberOfBytesRead = this->in->gcount();

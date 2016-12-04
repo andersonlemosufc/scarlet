@@ -37,6 +37,12 @@ HEADERS  += mainwindow.h \
     compress/compress.h \
     xml/element.h \
     comparable/huffman/huffelement.h \
-    decompress/decompress.h
+    decompress/decompress.h \
+    util/tagsForPat.h \
+    util/tagsForMap.h \
+    util/attrForPat.h \
+    util/attrForMap.h
 
 FORMS    += mainwindow.ui
+
+DISTFILES +=

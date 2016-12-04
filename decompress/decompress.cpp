@@ -27,7 +27,10 @@ void Decompress::decompress()
 
     char ch;
     in->read(&ch, 1);
-    bitsDespisedContent = ch-'0';
+    int bitsDespisedContent = ch-'0';
+    if(bitsDespisedContent == 0) this->bitsDespisedContent = 128;
+    else this->bitsDespisedContent = (unsigned char) pow(2,bitsDespisedContent-1);
+
 
     int len = Util::nextUInt(in);
     in->read(dataIn, len);
@@ -53,7 +56,11 @@ void Decompress::decompress()
 
     this->readTag(tags);
 
-    while(true){
+    //int k=0;
+    //int total = 137;
+    while(true){//true){
+        //k++;
+        //qDebug() << k;
         //qDebug() << "separador";
         if(this->readSeparator()){
             //qDebug() << "tag";
@@ -64,9 +71,11 @@ void Decompress::decompress()
             if(this->readCont(stack.top()->getType()==Element::NUMBER)) break;
             //qDebug() << "/conteudo";
         }
+
         //qDebug() << "/separador";
 
     }
+
     while(!stack.empty()){
         this->closeTag();
     }
@@ -120,9 +129,7 @@ bool Decompress::readTag(HuffElement *tags)
         this->readAttr(this->attrs);
     }
     this->lastWasContent = false;
-    unsigned char m = 255;
-    m<<=(bitsDespisedContent-1);
-    return (in->eof() && this->indexIn==(numberOfBytesRead-1) && (m & this->mask));
+    return (in->eof() && this->indexIn>=(numberOfBytesRead-1) && (this->bitsDespisedContent & this->mask));
 }
 
 void Decompress::readAttr(HuffElement *attrs)
@@ -190,11 +197,10 @@ bool Decompress::readCont(bool isNumber)
             nodo = tree;
         }
     }
-
-    unsigned char m = 255;
-    m<<=(bitsDespisedContent-1);
+    //qDebug() << "=====================";
+    //qDebug() << this->indexIn << " " << numberOfBytesRead << " " << (int)bitsDespisedContent << " " << this->mask;
     this->lastWasContent = true;
-    return (in->eof() && this->indexIn==(numberOfBytesRead-1) && (m & this->mask));
+    return (in->eof() && this->indexIn>=(numberOfBytesRead-1) && (this->bitsDespisedContent & this->mask));
 }
 
 

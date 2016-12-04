@@ -8,6 +8,11 @@ Compress::Compress(QString &filename)
     this->parser = new StreamParser(filename);
 }
 
+Compress::~Compress()
+{
+    delete this->parser;
+}
+
 
 void Compress::compress(QString filename)
 {
@@ -24,8 +29,8 @@ void Compress::compress()
     Patricia<Element*> *contAttr = Util::attributes();
     this->parser->countFrequence(contNum, contLet, contTag, contAttr);
 
-    HuffElement *huffTags = this->createHuffElement(contTag, true);
-    HuffElement *huffAttr = this->createHuffElement(contAttr, false);
+    HuffElement *huffTags = this->createHuffElement(contTag);
+    HuffElement *huffAttr = this->createHuffElement(contAttr);
     HuffmanTree *treeNum = this->createHuffTree(contNum);
     HuffmanTree *treeLet = this->createHuffTree(contLet);
 
@@ -67,11 +72,11 @@ void Compress::compress()
     this->write(tableTags, tableAttr, tableNum, tableLet);
     this->out->close();
     delete out;
-
+    qDebug() << "compressed " << filename;
 }
 
 
-HuffElement *Compress::createHuffElement(Patricia<Element *> *patricia, bool tags)
+HuffElement *Compress::createHuffElement(Patricia<Element *> *patricia)
 {
     PriorityQueue *pq = new PriorityQueue();
     for(Patricia<Element*>::iterator it=patricia->begin();

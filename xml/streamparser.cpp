@@ -12,7 +12,7 @@ StreamParser::StreamParser(QString filename)
 
 StreamParser::~StreamParser()
 {
-
+    this->xmlFile->close();
     delete this->xmlFile;
 }
 
@@ -115,7 +115,7 @@ void StreamParser::compress(ofstream* out, Patricia<Element *> *tags, Patricia<E
                 break;
             case QXmlStreamReader::Invalid:
                 invalid();
-                exit(0);
+                exit(1);
             case QXmlStreamReader::StartElement:{
                 this->writeSeparator(true);
                 this->contSeparator = -1;
