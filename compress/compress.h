@@ -11,6 +11,7 @@ class Compress
 {
 public:
     Compress(QString &filename);
+    ~Compress();
     static void compress(QString filename);
     void compress();
 
@@ -18,7 +19,7 @@ public:
 private:
 
     QString filename;
-    HuffElement *createHuffElement(Patricia<Element*>* patricia, bool tags);
+    HuffElement *createHuffElement(Patricia<Element*>* patricia);
     HuffmanTree* createHuffTree(int *cont);
     void writeTrees(HuffElement* tags, HuffElement* attr, HuffmanTree* num, HuffmanTree* let);
     void write(Patricia<Element*>* tags, Patricia<Element*>* attr,

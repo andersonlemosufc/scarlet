@@ -9,37 +9,31 @@ Util::Util()
 
 Patricia<Element *> *Util::tags()
 {
-    int token = Element::NORMAL;
     Patricia<Element*> *patricia = new Patricia<Element*>();
-    patricia->insert("g", new Element("g", new Code(3), Element::NUMBER, token));
-    patricia->insert("type", new Element("type", new Code(300), Element::NUMBER, token));
-    return patricia;
-}
-
-Patricia<Element *> *Util::attributes()
-{
-    int token = Element::ATTRIBUTE;
-    Patricia<Element*> *patricia = new Patricia<Element*>();
-    patricia->insert("id", new Element("id", new Code(1), Element::NUMBER, token));
-    patricia->insert("hue", new Element("hue", new Code(2), Element::NUMBER, token));
+    #include "./util/tagsForPat.h"
     return patricia;
 }
 
 std::unordered_map<int, Element *> *Util::mapOfTags()
 {
-    int token = Element::NORMAL;
     unordered_map<int,Element*>* map = new unordered_map<int,Element*>();
-    (*map)[3] = new Element("g", new Code(3), Element::NUMBER, token);
-    (*map)[300] = new Element("type", new Code(300), Element::NUMBER, token);
+    #include "./util/tagsForMap.h"
     return map;
+}
+
+
+Patricia<Element *> *Util::attributes()
+{
+    Patricia<Element*> *patricia = new Patricia<Element*>();
+    #include "./util/attrForPat.h"
+    return patricia;
 }
 
 std::unordered_map<int, Element *> *Util::mapOfAttributes()
 {
-    int token = Element::ATTRIBUTE;
+
     unordered_map<int,Element*>* map = new unordered_map<int,Element*>();
-    (*map)[1] = new Element("id", new Code(1), Element::NUMBER, token);
-    (*map)[2] = new Element("hue", new Code(2), Element::NUMBER, token);
+    #include "./util/attrForMap.h"
     return map;
 }
 
@@ -86,12 +80,14 @@ QString Util::getWithoutExtension(QString filename)
 
 string Util::getOutputFilename(QString filename)
 {
-    return Util::getWithoutExtension(filename).toStdString()+".scl";
+    return Util::getWithoutExtension(filename).replace("/entradas-comparativo/", "/scl/").toStdString() + ".scl";
+    //return Util::getWithoutExtension(filename).toStdString()+".scl";
 }
 
 string Util::getDecompressedFilename(QString filename)
 {
-    return Util::getWithoutExtension(filename).toStdString()+".sc.svg";
+    return Util::getWithoutExtension(filename).replace("/scl/", "/decompressed/").toStdString() + ".sc.svg";
+    //return Util::getWithoutExtension(filename).toStdString()+".sc.svg";
 }
 
 void Util::printIntBinaty(int n)

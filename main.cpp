@@ -5,60 +5,35 @@
 #include "./compress/compress.h"
 #include "./decompress/decompress.h"
 
-using namespace std;
-void print(string *s);
-void println(string *s);
+#include <chrono>
 
-QString getNome(int n){
-    QString rr = "/home/anderson/Documentos/tcc/svg/";
+using namespace std::chrono;
+using namespace std;
+
+QString getNome(int n, bool compress){
+    QString aux = (compress) ? "entradas-comparativo" : "scl";
+    QString rr = "/home/anderson/Documentos/tcc/"+aux+"/";
     if(n<10) rr+="000";
     else if(n<100) rr+="00";
     else if(n<1000) rr+="0";
-    rr = rr.append(QString("%1.svg").arg(n));
+    rr = (compress) ? rr.append(QString("%1.svg").arg(n)) : rr.append(QString("%1.scl").arg(n));
     return rr;
 }
 
 
 int main(){
-
-    int op = 7;
-
-    QStringList l;
-    l.append("0001.svg");
-    l.append("0003.svg");
-    l.append("0011.svg");
-    l.append("0023.svg");
-    l.append("0024.svg");
-    l.append("0382.svg");
-    l.append("brasil.svg");
-
-
-    QString filename = "/home/anderson/Documentos/tmp/scarlet-testes/"+l.at(op-1);
-
-    Compress *c = new Compress(filename);
-    Decompress *d = new Decompress(Util::getWithoutExtension(filename)+".scl");
-    c->compress();
-    d->decompress();
+    high_resolution_clock::time_point t1, t2;
+    int exe = 5;
+    QString name = "/home/anderson/Documentos/tcc/tempo" + QString("%1").arg(exe)+ ".txt";
+    ofstream out(name.toStdString());
+   for(int k=1;k<=3000;k++){
+        QString filename = getNome(k, false);
+        t1 = high_resolution_clock::now();
+        //Compress::compress(filename);
+        Decompress::decompress(filename);
+        t2 = high_resolution_clock::now();
+        auto t = std::chrono::duration_cast<std::chrono::nanoseconds>(t2-t1).count();
+        out << t << "\n";
+    }
+   out.close();
 }
-
-/*
-int main(int argc, char *argv[])
-{
-    QApplication a(argc, argv);
-    MainWindow w;
-    w.show();
-
-    return a.exec();
-}
-*/
-
-void print(string *s){
-    if(s==nullptr) cout << "NULL";
-    else cout << *s;
-}
-
-void println(string *s){
-    if(s==nullptr) cout << "NULL" << endl;
-    else cout << *s << endl;
-}
-

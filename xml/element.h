@@ -79,6 +79,8 @@ public:
 
     void setTokenByChar(char ch);
 
+    bool equals(Element *other);
+
 private:
     Code *code;
     Bits bits;
